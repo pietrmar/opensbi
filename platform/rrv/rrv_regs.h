@@ -8,4 +8,7 @@
 #define RRV_ACLINT_BASE			0x40010000
 #define RRV_ACLINT_MTIMER_FREQ		1000000
 
+#define RRV_PLIC_BASE			0x14000000
+#define RRV_PLIC_NUM_SOURCES		(128 - 1)
+
 #endif /* __REGS__H__ */

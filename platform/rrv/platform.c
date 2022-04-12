@@ -12,6 +12,7 @@
 #include <sbi/sbi_console.h>
 #include <sbi_utils/timer/aclint_mtimer.h>
 #include <sbi_utils/ipi/aclint_mswi.h>
+#include <sbi_utils/irqchip/plic.h>
 
 #include "rrv_regs.h"
 
@@ -23,6 +24,11 @@ static void rrv_debug_putc(char ch)
 static struct sbi_console_device rrv_debug_console = {
 	.name = "rrv-debug",
 	.console_putc = rrv_debug_putc,
+};
+
+static struct plic_data plic = {
+	.addr = RRV_PLIC_BASE,
+	.num_src = RRV_PLIC_NUM_SOURCES,
 };
 
 static struct aclint_mswi_data mswi = {
@@ -82,6 +88,20 @@ static int platform_ipi_init(bool cold_boot)
 	return aclint_mswi_warm_init();
 }
 
+static int platform_irqchip_init(bool cold_boot)
+{
+	int rc;
+	u32 hartid = current_hartid();
+
+	if (cold_boot) {
+		rc = plic_cold_irqchip_init(&plic);
+		if (rc)
+			return rc;
+	}
+
+	return plic_warm_irqchip_init(&plic, hartid * 2, hartid * 2 + 1);
+}
+
 /*
  * Platform descriptor.
  */
@@ -89,13 +109,14 @@ const struct sbi_platform_operations platform_ops = {
 	.console_init		= platform_console_init,
 	.timer_init		= platform_timer_init,
 	.ipi_init		= platform_ipi_init,
+	.irqchip_init		= platform_irqchip_init,
 };
 
 const struct sbi_platform platform = {
 	.opensbi_version	= OPENSBI_VERSION,
 	.platform_version	= SBI_PLATFORM_VERSION(0x0, 0x00),
 	.name			= "rrv",
-	// .features		= SBI_PLATFORM_DEFAULT_FEATURES,
+	.features		= SBI_PLATFORM_DEFAULT_FEATURES,
 	.features		= 0,
 	.hart_count		= 1,
 	.hart_stack_size	= SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
