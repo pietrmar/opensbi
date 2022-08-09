@@ -44,6 +44,10 @@ endif
 ifdef FW_JUMP_FDT_ADDR
 firmware-genflags-$(FW_JUMP) += -DFW_JUMP_FDT_ADDR=$(FW_JUMP_FDT_ADDR)
 endif
+ifdef FW_JUMP_CMDLINE_ADDR
+firmware-genflags-$(FW_JUMP) += -DFW_JUMP_CMDLINE_ADDR=$(FW_JUMP_CMDLINE_ADDR)
+firmware-genflags-$(FW_JUMP) += -DFW_JUMP_CMDLINE_MAGIC=$(FW_JUMP_CMDLINE_MAGIC)
+endif
 
 firmware-bins-$(FW_PAYLOAD) += fw_payload.bin
 ifdef FW_PAYLOAD_PATH

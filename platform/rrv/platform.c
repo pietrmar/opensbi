@@ -10,9 +10,13 @@
 #include <sbi/sbi_const.h>
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_console.h>
+#include <sbi/sbi_string.h>
 #include <sbi_utils/timer/aclint_mtimer.h>
 #include <sbi_utils/ipi/aclint_mswi.h>
 #include <sbi_utils/irqchip/plic.h>
+#include <libfdt.h>
+#include <sbi_utils/fdt/fdt_helper.h>
+#include <sbi_utils/fdt/fdt_fixup.h>
 
 #include "rrv_regs.h"
 
@@ -102,10 +106,37 @@ static int platform_irqchip_init(bool cold_boot)
 	return plic_warm_irqchip_init(&plic, hartid * 2, hartid * 2 + 1);
 }
 
+static int platform_final_init(bool cold_boot)
+{
+	void *fdt;
+
+	fdt = fdt_get_address();
+	fdt_fixups(fdt);
+
+#ifdef FW_JUMP_CMDLINE_ADDR
+	u32 *magic = (u32 *)FW_JUMP_CMDLINE_ADDR;
+
+	if (*magic == FW_JUMP_CMDLINE_MAGIC) {
+		int node = fdt_path_offset(fdt, "/chosen");
+		if (node < 0)
+			node = fdt_path_offset(fdt, "/chosen@0");
+
+		if (node >= 0) {
+			const char *cmdline = (const char *)FW_JUMP_CMDLINE_ADDR + 4;
+			sbi_printf("Kernel bootargs           : %s\n", cmdline);
+			fdt_setprop_string(fdt, node, "bootargs", cmdline);
+		}
+	}
+#endif
+
+	return 0;
+}
+
 /*
  * Platform descriptor.
  */
 const struct sbi_platform_operations platform_ops = {
+	.final_init		= platform_final_init,
 	.console_init		= platform_console_init,
 	.timer_init		= platform_timer_init,
 	.ipi_init		= platform_ipi_init,

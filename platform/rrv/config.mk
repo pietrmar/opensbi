@@ -59,6 +59,9 @@ FW_JUMP_ADDR=0x80200000
 endif
 FW_JUMP_FDT_ADDR=0x82200000
 
+FW_JUMP_CMDLINE_MAGIC=0xDEADBEEF
+FW_JUMP_CMDLINE_ADDR=0x823FF000
+
 #
 # Firmware with payload configuration.
 # Optional parameters are commented out. Uncomment and define these parameters
